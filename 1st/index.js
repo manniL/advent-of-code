@@ -2,7 +2,7 @@ const fs = require('fs-extra')
 const path = require('path')
 const Lazy = require('lazy.js')
 
-const solveFirst = (numberString) => {
+const solveFirstCaptcha = (numberString) => {
   const splitNumbers = numberString.split('')
 
   //Push first number again for evaluation
@@ -39,7 +39,7 @@ const solveSecondCaptcha = (numberString) => {
 }
 
 const solveCaptchas = (numberString) => {
-  solveFirst(numberString)
+  solveFirstCaptcha(numberString)
   solveSecondCaptcha(numberString)
 }
 
