@@ -15,20 +15,17 @@ const mapEvenMod = (arr) => {
 }
 
 const solveFirstChecksum = (seq) => {
-  const result = seq.map(mapDifference).reduce((carry, integer) => carry + integer, 0)
-  console.log(result)
+  return seq.map(mapDifference).reduce((carry, integer) => carry + integer, 0)
 }
 
 const solveSecondChecksum = (seq) => {
-  const result = seq.map(mapEvenMod).reduce((carry, integer) => carry + integer, 0)
-  console.log(result)
+  return seq.map(mapEvenMod).reduce((carry, integer) => carry + integer, 0)
 }
 
 const solveChecksums = (numberString) => {
   const seq = Lazy(numberString.split('\n')).map((line) => line.split('\t'))
 
-  solveFirstChecksum(seq)
-  solveSecondChecksum(seq)
+  console.log(solveFirstChecksum(seq), solveSecondChecksum(seq))
 }
 
 fs.readFile(path.join(__dirname, 'input.txt'), 'utf8').then(solveChecksums)

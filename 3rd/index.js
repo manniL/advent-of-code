@@ -22,7 +22,7 @@ const solveFirstSpiral = (number) => {
 }
 
 const solveSpirals = (number) => {
-  number = parseInt(number)-1
+  number = parseInt(number) - 1
   console.log(solveFirstSpiral(number))
 }
 

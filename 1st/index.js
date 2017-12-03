@@ -12,8 +12,7 @@ const solveFirstCaptcha = (numberString) => {
   //Push first number again for evaluation
   splitNumbers.push(splitNumbers[0])
 
-  let result = Lazy(splitNumbers).map((o) => parseInt(o)).consecutive(2).reduce(sumUpIfEqual, 0)
-  console.log(result)
+  return Lazy(splitNumbers).map((o) => parseInt(o)).consecutive(2).reduce(sumUpIfEqual, 0)
 }
 
 const solveSecondCaptcha = (numberString) => {
@@ -22,8 +21,9 @@ const solveSecondCaptcha = (numberString) => {
   let sequence = Lazy(splitNumbers)
     .map((o) => parseInt(o))
 
-  let result = sequence.map((value, index) => {
-    let halfLength = sequence.length() / 2
+  let halfLength = sequence.length() / 2
+
+  return sequence.map((value, index) => {
     if (index <= halfLength) {
       return [value, sequence.get(halfLength + index)]
     }
@@ -31,12 +31,10 @@ const solveSecondCaptcha = (numberString) => {
   })
     .filter()
     .reduce(sumUpIfEqual, 0) * 2
-  console.log(result)
 }
 
 const solveCaptchas = (numberString) => {
-  solveFirstCaptcha(numberString)
-  solveSecondCaptcha(numberString)
+  console.log(solveFirstCaptcha(numberString), solveSecondCaptcha(numberString))
 }
 
 fs.readFile(path.join(__dirname, 'input.txt'), 'utf8').then(solveCaptchas)
