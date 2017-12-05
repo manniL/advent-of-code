@@ -5,7 +5,7 @@ const solveFirstInstruction = (seq) => {
   let nextPos = 0
   let steps = 0
 
-  while (nextPos >= 0 && nextPos < seq.length) {
+  while (typeof seq[nextPos] !== 'undefined') {
     nextPos = nextPos + seq[nextPos]++
     steps++
   }
@@ -16,7 +16,7 @@ const solveSecondInstruction = (seq) => {
   let nextPos = 0
   let steps = 0
 
-  while (nextPos >= 0 && nextPos < seq.length) {
+  while (typeof seq[nextPos] !== 'undefined') {
     nextPos = nextPos + ((seq[nextPos] >= 3) ? seq[nextPos]-- : seq[nextPos]++)
     steps++
   }
