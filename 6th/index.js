@@ -17,10 +17,11 @@ Lazy.ArrayLikeSequence.define('rotate', {
   }
 })
 
-const solveFirstInstruction = (seq) => {
+const solveTasks = (seq) => {
 
   let previousStates = []
-  let currentState = seq
+  let currentState = Lazy(seq).split('\t').map((n) => parseInt(n))
+
   let cycles = 0
 
   while (!previousStates.some((e) => JSON.stringify(e) === JSON.stringify(currentState.toArray()))) {
@@ -41,13 +42,19 @@ const solveFirstInstruction = (seq) => {
     currentState = Lazy(rotatedSeq).rotate(index + 1, true)
     cycles++
   }
-  return cycles
+  let endCarry = Lazy(previousStates).reverse().reduce((c, e) => {
+    if (!c.found) {
+      if (JSON.stringify(c.array) !== JSON.stringify(e)) {
+        c.count++
+      } else {
+        c.found = true
+      }
+    }
+    return c
+  }, {array: currentState.toArray(), count: 1, found: false})
+
+  console.log(cycles, endCarry.count)
 
 }
 
-const solveInstructions = (numberString) => {
-  const seq = Lazy(numberString).split('\t').map((n) => parseInt(n))
-  console.log(solveFirstInstruction(seq))
-}
-
-fs.readFile(path.join(__dirname, 'input.txt'), 'utf8').then(solveInstructions)
+fs.readFile(path.join(__dirname, 'input.txt'), 'utf8').then(solveTasks)
