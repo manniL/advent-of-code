@@ -2,21 +2,6 @@ const fs = require('fs-extra')
 const path = require('path')
 const Lazy = require('lazy.js')
 
-Lazy.ArrayLikeSequence.define('rotate', {
-  init (offset, reverse = false) {
-    this.offset = offset
-    this.reverse = reverse
-  },
-
-  get (i) {
-    let index = (i + (this.reverse ? -this.offset : this.offset)) % this.parent.length()
-    if (index < 0) {
-      index += this.parent.length()
-    }
-    return this.parent.get(index)
-  }
-})
-
 const solveFirstTask = (seq) => {
   return seq.map(p => p.name).without(seq.map((p) => p.programs).filter().flatten().uniq()).first()
 }
