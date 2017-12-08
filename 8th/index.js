@@ -2,21 +2,23 @@ const fs = require('fs-extra')
 const path = require('path')
 const Lazy = require('lazy.js')
 
-const solveFirstTask = (seq) => {
+const solveBothTasks = (seq) => {
 
   //Init registers
   seq.each(({register}) => {this[register] = 0})
 
+  let maxEver = Number.MIN_VALUE
   //Run stuff
   seq.each((instruction) => {
     //Don't use template strings here! Eval won't work then
     const condition = `${this[instruction.condition[1]]} ${instruction.condition.splice(2).join(' ')}`
     if (eval(condition)) {
       this[instruction.register] += [instruction.by] * (instruction.operation === 'inc' ? 1 : -1)
+      maxEver = (this[instruction.register] > maxEver) ? this[instruction.register] : maxEver
     }
   })
 
-  return seq.map(({register}) => this[register]).max()
+  return {max: seq.map(({register}) => this[register]).max(), maxEver}
 }
 
 const solveTasks = (seq) => {
@@ -32,7 +34,7 @@ const solveTasks = (seq) => {
     }
   })
 
-  console.log(solveFirstTask(overview))
+  console.log(solveBothTasks(overview))
 
 }
 
