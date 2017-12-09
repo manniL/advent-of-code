@@ -17,9 +17,14 @@ const solveFirstTask = (string) => {
   ))
 }
 
+const solveSecondTask = (string) => {
+
+  return string.replace(/!.?/g, '').match(/<(.*?)>/g).reduce((c, s) => c + s.length - 2, 0)
+}
+
 const solveTasks = (inputString) => {
 
-  console.log(solveFirstTask(inputString))
+  console.log(solveFirstTask(inputString), solveSecondTask(inputString))
 
 }
 
