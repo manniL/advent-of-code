@@ -43,7 +43,7 @@ const solveFirstTask = (listSeq, lengths) => {
 const solveSecondTask = (listSeq, asciiCodes) => {
 
   let additionalCodes = [17, 31, 73, 47, 23]
-  additionalCodes.forEach((a) => asciiCodes.push(a))
+  asciiCodes = asciiCodes.concat(additionalCodes)
 
   let position = 0
   let skipLen = 0
