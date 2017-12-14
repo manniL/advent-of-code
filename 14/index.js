@@ -47,18 +47,69 @@ const knotHash = (asciiCodes) => {
   return denseHash.map((a) => a.toString(16).length === 2 ? a.toString(16) : '0' + a.toString(16)).join('')
 }
 
-const solveFirstTask = (str) => {
+const getMemory = (str) => {
   let asciiCodes = [...str].map((c) => c.charCodeAt(0))
   let suffix = Lazy.range(128).toArray()
-  suffix = suffix.map((suffix) => {
+  return suffix.map((suffix) => {
     let finalString = asciiCodes.concat([...`-${suffix}`].map(l => l.charCodeAt(0)))
     let hash = knotHash(finalString)
     return [...[...hash].map((letter) => [...'0000' + parseInt(letter, 16).toString(2)].splice(-4).join('')).join('')].map((n) => parseInt(n) ? '#' : '.').join('')
   })
-  return [...suffix.join('')].filter((l) => l === '#').length
+}
+
+const solveFirstTask = (memory) => {
+  return [...memory.join('')].filter((l) => l === '#').length
+}
+
+const solveSecondTask = (memory) => {
+
+  const getGroup = (memoryLookup, x, y) => {
+    let topNeighbour = x > 0 ? memoryLookup[x - 1][y] : '.'
+    let leftNeighbour = y > 0 ? memoryLookup[x][y - 1] : '.'
+
+    return topNeighbour !== '.' ? topNeighbour : leftNeighbour !== '.' ? leftNeighbour : ++groupCount
+  }
+
+  const isHash = (a) => a === '#'
+
+  const updateNearFields = (memoryLookup, x, y, newValue) => {
+    if (x < memoryLookup.length - 1 && isHash(memoryLookup[x + 1][y])) {
+      memoryLookup[x + 1][y] = newValue
+      updateNearFields(memoryLookup, x + 1, y, newValue)
+    }
+    if (y < memoryLookup[x].length - 1 && isHash(memoryLookup[x][y + 1])) {
+      memoryLookup[x][y + 1] = newValue
+      updateNearFields(memoryLookup, x, y + 1, newValue)
+    }
+
+    if (x > 0 && isHash(memoryLookup[x - 1][y])) {
+      memoryLookup[x - 1][y] = newValue
+      updateNearFields(memoryLookup, x - 1, y, newValue)
+    }
+
+    if (y > 0 && isHash(memoryLookup[x][y - 1])) {
+      memoryLookup[x][y - 1] = newValue
+      updateNearFields(memoryLookup, x, y - 1, newValue)
+    }
+
+  }
+
+  let groupCount = 0
+  memory = memory.map((r) => [...r])
+  let memoryClone = [...memory]
+
+  memory.forEach((row, x) => row.forEach((cell, y) => {
+    if (isHash(cell)) {
+      memoryClone[x][y] = getGroup(memoryClone, x, y)
+      updateNearFields(memoryClone, x, y, memoryClone[x][y])
+    }
+  }))
+
+  return groupCount
 }
 
 const solveTasks = (inputString) => {
-  console.log(solveFirstTask(inputString))
+  let memory = getMemory(inputString)
+  console.log(solveFirstTask(memory), solveSecondTask(memory))
 }
 fs.readFile(path.join(__dirname, 'input.txt'), 'utf8').then(solveTasks)
