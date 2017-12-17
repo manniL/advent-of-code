@@ -7,34 +7,30 @@ const sumUpIfEqual = (carry, pair) => {
 }
 
 const solveFirstCaptcha = (numberString) => {
-  const splitNumbers = numberString.split('')
 
   //Push first number again for evaluation
-  splitNumbers.push(splitNumbers[0])
+  numberString.push(numberString[0])
 
-  return Lazy(splitNumbers).map((o) => parseInt(o)).consecutive(2).reduce(sumUpIfEqual, 0)
+  return Lazy(numberString).consecutive(2).reduce(sumUpIfEqual, 0)
 }
 
-const solveSecondCaptcha = (numberString) => {
-  const splitNumbers = numberString.split('')
+const solveSecondCaptcha = (sequence) => {
 
-  let sequence = Lazy(splitNumbers)
-    .map((o) => parseInt(o))
-
-  let halfLength = sequence.length() / 2
+  let halfLength = sequence.length / 2
 
   return sequence.map((value, index) => {
     if (index <= halfLength) {
-      return [value, sequence.get(halfLength + index)]
+      return [value, sequence[(halfLength + index)]]
     }
     return undefined
   })
-    .filter()
+    .filter((a) => a)
     .reduce(sumUpIfEqual, 0) * 2
 }
 
 const solveCaptchas = (numberString) => {
-  console.log(solveFirstCaptcha(numberString), solveSecondCaptcha(numberString))
+  numberString = numberString.split('').map((n) => parseInt(n))
+  console.log(solveFirstCaptcha([...numberString]), solveSecondCaptcha([...numberString]))
 }
 
 fs.readFile(path.join(__dirname, 'input.txt'), 'utf8').then(solveCaptchas)

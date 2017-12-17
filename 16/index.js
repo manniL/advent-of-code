@@ -45,7 +45,7 @@ const solveSecondTask = (instructions) => {
       break
     }
   }
-  return positions[(10 ** 9 % positions.length)]
+  return positions[(1E9 % positions.length)]
 }
 
 const solveTasks = (input) => {

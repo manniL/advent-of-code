@@ -18,7 +18,7 @@ const solveBothTasks = (generators, partTwo = false) => {
   }
 
   let mapFn = partTwo ? mapGenWithMod : mapGen
-  let maxPairs = partTwo ? 5 * 10 ** 6 : 4 * 10 ** 7
+  let maxPairs = partTwo ? 5E6 : 4E7
   while (twoPairsCreated < maxPairs) {
 
     if ((generators[0].value & 0xFFFF) === (generators[1].value & 0xFFFF)) {

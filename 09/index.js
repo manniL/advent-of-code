@@ -6,6 +6,7 @@ const solveFirstTask = (string) => {
   const calculateScore = (array, multiplier = 1) => {
     return array.reduce((c, a) => c + calculateScore(a, multiplier + 1), 0) + multiplier
   }
+
   return calculateScore(JSON.parse(string
     .replace(/!.?/g, '')
     .replace(/,?<.*?>,?/g, '')

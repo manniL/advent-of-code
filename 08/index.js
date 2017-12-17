@@ -8,9 +8,8 @@ const solveBothTasks = (seq) => {
   seq.each(({register}) => {this[register] = 0})
 
   let maxEver = Number.MIN_VALUE
-  //Run stuff
+
   seq.each((instruction) => {
-    //Don't use template strings here! Eval won't work then
     const condition = `${this[instruction.condition[1]]} ${instruction.condition.splice(2).join(' ')}`
     if (eval(condition)) {
       this[instruction.register] += [instruction.by] * (instruction.operation === 'inc' ? 1 : -1)

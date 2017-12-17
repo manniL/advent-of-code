@@ -8,7 +8,7 @@ const mapDifference = (arr) => {
 }
 
 const mapEvenMod = (arr) => {
-  let seq = Lazy(arr).map(i => parseInt(i)).sort()
+  let seq = Lazy(arr).sort()
   return seq.map((number) => {
     return seq.find((sn) => sn !== number && sn % number === 0) / number
   }).filter().first()
