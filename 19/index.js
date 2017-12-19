@@ -22,6 +22,7 @@ class Packet {
     this.lastDirection = 'TOP'
     this.isTerminated = false
     this.letters = []
+    this.steps = 0
   }
 
   findFirstPosition () {
@@ -56,6 +57,7 @@ class Packet {
   travelFromPosition (direction) {
     this.currentPosition = this.currentPosition.map((n, i) => n + DIRECTIONS[direction][i])
     this.lastDirection = direction
+    this.steps++
   }
 
   getPositionFromCross () {
@@ -99,7 +101,7 @@ class Packet {
   }
 }
 
-const solveFirstTask = (plan) => {
+const solveBothTasks = (plan) => {
   let packet = new Packet(plan)
 
   packet.findFirstPosition()
@@ -108,14 +110,14 @@ const solveFirstTask = (plan) => {
     packet.step()
   }
 
-  return packet.letters.join('')
+  return {letters: packet.letters.join(''), steps: packet.steps}
 }
 
 const solveTasks = (seq) => {
 
   let rawInstructions = (seq).split('\n').map((s) => [...s])
 
-  console.log(solveFirstTask(rawInstructions))
+  console.log(solveBothTasks(rawInstructions))
 }
 
 fs.readFile(path.join(__dirname, 'input.txt'), 'utf8').then(solveTasks).catch(e => console.error(e))
