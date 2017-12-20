@@ -23,6 +23,14 @@ class Particle {
     return absSum(Object.keys(this.position).map((k) => this.position[k]))
   }
 
+  step () {
+    let [vx, vy, vz] = Object.keys(this.velocity).map((k) => this.velocity[k] + this.acceleration[k])
+    this.velocity = {x: vx, y: vy, z: vz}
+
+    let [px, py, pz] = Object.keys(this.position).map((k) => this.position[k] + this.velocity[k])
+    this.position = {x: px, y: py, z: pz}
+  }
+
 }
 
 const solveFirstTask = (particles) => {
@@ -51,6 +59,31 @@ const solveFirstTask = (particles) => {
   })
 }
 
+const solveSecondTask = (particles) => {
+
+  for (let i = 0; i < 2E3; i++) {
+    let positions = []
+    let particleIdsToRemove = []
+
+    particles.forEach((p) => {
+      p.step()
+    })
+    particles.forEach((p) => {
+        let posString = JSON.stringify(p.position)
+        let indexOfPosString = positions.map(p => p.position).indexOf(posString)
+        if (indexOfPosString !== -1) {
+          particleIdsToRemove.push(p.id, positions[indexOfPosString].id)
+        } else {
+          positions.push({id: p.id, position: posString})
+        }
+      }
+    )
+
+    particles = particles.filter(p => !particleIdsToRemove.includes(p.id))
+  }
+  return particles.length
+}
+
 const solveTasks = (rawParticles) => {
 
   let particles = (rawParticles).split('\n').map((line, id) => {
@@ -62,7 +95,7 @@ const solveTasks = (rawParticles) => {
     return new Particle(id, position, velocity, acceleration)
   })
 
-  console.log(solveFirstTask(particles))
+  console.log(solveFirstTask(particles), solveSecondTask(particles))
 }
 
 fs.readFile(path.join(__dirname, 'input.txt'), 'utf8').then(solveTasks).catch(e => console.error(e))
