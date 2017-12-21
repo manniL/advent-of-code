@@ -81,13 +81,24 @@ const solveFirstTask = (instructions) => {
   return grid.activePixels()
 }
 
+const solveSecondTask = (instructions) => {
+
+  let grid = new Grid(instructions)
+
+  for (let i = 0; i < 18; i++) {
+    grid.step()
+  }
+
+  return grid.activePixels()
+}
+
 const solveTasks = (instructions) => {
   instructions = instructions.split('\n').reduce((c, i) => {
     let [input, output] = i.split(' => ')
     c[input] = output
     return c
   }, {})
-  console.log(solveFirstTask(instructions))
+  console.log(solveFirstTask(instructions), solveSecondTask(instructions))
 }
 
 fs.readFile(path.join(__dirname, 'input.txt'), 'utf8').then(solveTasks).catch(e => console.error(e))
