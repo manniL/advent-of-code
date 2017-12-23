@@ -9,6 +9,23 @@ const solveFirstTask = (instructions) => {
   return p.mulCount
 }
 
+const solveSecondTask = (instructions) => {
+  //AKA FindPrimes
+  let input = parseInt(instructions[0].split(' ')[2]) * 100 + 100000
+  let endOffset = 17000
+  let nonPrimeNumbers = 0
+  for (let i = input; i <= input + endOffset; i += 17) {
+    let f = 2
+    while (i % f !== 0) {
+      f++
+    }
+    if (i !== f) {
+      nonPrimeNumbers++
+    }
+  }
+  return nonPrimeNumbers
+}
+
 class Program {
   constructor (instructions) {
     this.instructions = instructions
@@ -68,7 +85,7 @@ const solveTasks = (seq) => {
 
   let rawInstructions = (seq).split('\n')
 
-  console.log(solveFirstTask(rawInstructions))
+  console.log(solveFirstTask(rawInstructions), solveSecondTask(rawInstructions))
 }
 
 fs.readFile(path.join(__dirname, 'input.txt'), 'utf8').then(solveTasks).catch(e => console.error(e))
