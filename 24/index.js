@@ -6,7 +6,10 @@ const solveTasks = (seq) => {
   let ports = (seq).split('\n').map(i => i.split('/').map(n => parseInt(n)))
 
   let bridges = [...buildUpBridges(0, [], ports, 0)]
-  console.log(bridges.reduce((c, b) => c.strength > b.strength ? c : b, {}).strength)
+  console.log({
+    strongest: bridges.reduce((c, b) => c.strength > b.strength ? c : b, {}).strength,
+    longest: bridges.sort((x, y) => y.used.length - x.used.length || y.strength - x.strength)[0].strength
+  })
 
 }
 
