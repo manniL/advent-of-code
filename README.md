@@ -1,5 +1,5 @@
-# Advent of Code 2017
+# Advent of Code 2018
 
-Here I'll publish my solutions for the [Advent of Code 2017](http://adventofcode.com/2017/) tasks.
+Here I'll publish my solutions for the [Advent of Code 2018](http://adventofcode.com/2018/) tasks.
 
-I use(d) Node.js and functional programming paradigms to solve those!
+I use(d) Node.js, Ramda and functional programming paradigms to solve those!
