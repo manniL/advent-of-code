@@ -24,7 +24,7 @@ const partOne = input => {
 }
 
 const partTwo = input => {
-  const xprod = R.xprod(input, input)
+  const pairs = distinctPairs(input, input)
   const correctPairs = R.filter(([a, b]) => {
     if (a === b) {
       //ignore duplicates
@@ -35,12 +35,20 @@ const partTwo = input => {
 
     // One letter mismatch
     return equalZippedPairs.length === a.length - 1
-  }, xprod)
+  }, pairs)
 
   // Dedupe as xprod gives [1,2] and [2,1] as combinations (all possible ones, with "duplicates")
   const correctPair = R.last(correctPairs)
 
   return R.pipe(R.filter(arrayPairIsEqual), R.map(R.last), R.join(''))(R.zip(...correctPair))
+}
+
+const distinctPairs = (a, b) => {
+  const [x, ...xs] = a
+  const [, ...ys] = b
+  return a.length && b.length
+    ? ys.map(y => [x, y]).concat(distinctPairs(xs, ys))
+    : []
 }
 
 const arrayPairIsEqual = ([x, y]) => R.equals(x, y)
