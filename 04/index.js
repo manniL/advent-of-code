@@ -18,7 +18,7 @@ const transformToObject = str => {
 const guardSleepTimePairs = input => {
   // Split by "begin shift" records
   // Result is the interval for that specific guard
-  const intervals = splitWith(({action}) => isShiftAction(action), input)
+  const intervals = splitWith(R.pipe(R.prop('action'), isShiftAction), input)
   const shifts = R.pipe(
     R.pluck('action'),
     R.aperture(2),
