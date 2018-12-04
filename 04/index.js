@@ -8,8 +8,8 @@ const splitWith = require('../utils/splitWith')
 const run = async () => {
   const input = await readFile(path.join(__dirname, './input.txt'), 'utf-8')
   const formattedInput = formatInput(input)
-  console.log(splitWith(a => a === 1, [1, 2, 1, 1, 1, 3]))
   console.log('Part 1:', partOne(formattedInput))
+  console.log('Part 2:', partTwo(formattedInput))
 }
 
 run()
@@ -24,7 +24,7 @@ const transformToObject = str => {
   }
 }
 
-const partOne = input => {
+const guardSleepTimePairs = input => {
   // Split by "begin shift" records
   // Result is the interval for that specific guard
   const intervals = splitWith(({action}) => isShiftAction(action), input)
@@ -52,18 +52,30 @@ const partOne = input => {
     return idMap
   }, new Map)(zippedPairs)
 
-  const [id, minutesAsleep] = mostMinutesAsleep(Array.from(dedupedPairs))
+  return Array.from(dedupedPairs)
+}
 
-  const minute = minuteMostOftenAsleep(minutesAsleep)
+const partOne = input => {
+  const dedupedPairs = guardSleepTimePairs(input)
+  const [id, minutesAsleep] = mostMinutesAsleep(dedupedPairs)
+
+  const minute = R.head(minuteMostOftenAsleep(minutesAsleep))
   return {id, minute, result: id * minute}
 }
+
+const partTwo = R.pipe(
+  guardSleepTimePairs,
+  R.map(([id, minutes]) => [id, minuteMostOftenAsleep(minutes)]),
+  R.reduce(R.maxBy(([, [minute, timesAsleepThere]]) => timesAsleepThere), [0, [0, 0]]),
+  ([id, [minute]]) => ({id, minute, result: id * minute})
+)
 
 const isShiftAction = R.test(/shift/)
 
 const mostMinutesAsleep = R.reduce(R.maxBy(([, minutes]) => minutes.length), [0, []])
 const formatInput = R.pipe(R.split('\n'), R.dropLast(1), R.map(transformToObject), R.sort(dateComparator))
 
-const minuteMostOftenAsleep = R.pipe(R.countBy(Number), R.toPairs, R.reduce(R.maxBy(([k, v]) => Number(v)), [0, 0]), R.head)
+const minuteMostOftenAsleep = R.pipe(R.countBy(Number), R.toPairs, R.reduce(R.maxBy(([k, v]) => Number(v)), [0, 0]))
 
 const onlyShiftsWithSleep = (shifts, [actionOne, actionTwo]) => {
   if (isShiftAction(actionOne) && !isShiftAction(actionTwo)) {
