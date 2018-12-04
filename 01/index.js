@@ -1,5 +1,5 @@
 const R = require('ramda')
-const {readFile} = require('../utils/fs.js')
+const {readFileAndSplitByLines} = require('../utils/fs.js')
 const path = require('path')
 
 const partOne = R.sum
@@ -36,7 +36,7 @@ const partTwo = input => {
   )()
 }
 
-run()
+const input = readFileAndSplitByLines(path.join(__dirname, './input.txt'))
 
 const formatInput = R.map(Number)
 const formattedInput = formatInput(input)

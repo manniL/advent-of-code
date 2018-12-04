@@ -1,18 +1,6 @@
 const R = require('ramda')
-const {readFile} = require('../utils/fs.js')
+const {readFileAndSplitByLines} = require('../utils/fs.js')
 const path = require('path')
-
-const run = async () => {
-  const input = await readFile(path.join(__dirname, './input.txt'), 'utf-8')
-  const formattedInput = formatInput(input)
-
-  console.log('Part 1:', partOne(formattedInput))
-  console.log('Part 2:', partTwo(formattedInput))
-}
-
-run()
-
-const formatInput = R.pipe(R.split('\n'), R.dropLast(1))
 
 const arrayPairIsEqual = R.converge(R.equals, [R.head, R.last])
 
@@ -56,3 +44,7 @@ const partTwo = R.pipe(
   R.join('')
 )
 
+const input = readFileAndSplitByLines(path.join(__dirname, './input.txt'))
+
+console.log('Part 1:', partOne(input))
+console.log('Part 2:', partTwo(input))

@@ -1,18 +1,9 @@
 const R = require('ramda')
-const {readFile} = require('../utils/fs.js')
+const {readFileAndSplitByLines} = require('../utils/fs.js')
 const path = require('path')
 
 const dateFns = require('date-fns')
 const splitWith = require('../utils/splitWith')
-
-const run = async () => {
-  const input = await readFile(path.join(__dirname, './input.txt'), 'utf-8')
-  const formattedInput = formatInput(input)
-  console.log('Part 1:', partOne(formattedInput))
-  console.log('Part 2:', partTwo(formattedInput))
-}
-
-run()
 
 const dateComparator = (a, b) => dateFns.compareAsc(a.date, b.date)
 const transformToObject = str => {
@@ -73,7 +64,6 @@ const partTwo = R.pipe(
 const isShiftAction = R.test(/shift/)
 
 const mostMinutesAsleep = R.reduce(R.maxBy(([, minutes]) => minutes.length), [0, []])
-const formatInput = R.pipe(R.split('\n'), R.dropLast(1), R.map(transformToObject), R.sort(dateComparator))
 
 const minuteMostOftenAsleep = R.pipe(R.countBy(Number), R.toPairs, R.reduce(R.maxBy(([k, v]) => Number(v)), [0, 0]))
 
@@ -83,3 +73,10 @@ const onlyShiftsWithSleep = (shifts, [actionOne, actionTwo]) => {
   }
   return shifts
 }
+
+const input = readFileAndSplitByLines(path.join(__dirname, './input.txt'))
+
+const formatInput = R.pipe(R.map(transformToObject), R.sort(dateComparator))
+const formattedInput = formatInput(input)
+console.log('Part 1:', partOne(formattedInput))
+console.log('Part 2:', partTwo(formattedInput))
