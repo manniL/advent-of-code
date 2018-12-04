@@ -6,6 +6,7 @@
   "author": "Alexander Lichter <manniL@gmx.net>",
   "license": "MIT",
   "dependencies": {
+    "date-fns": "^1.29.0",
     "ramda": "^0.26.1"
   }
 }
