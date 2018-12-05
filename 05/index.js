@@ -30,7 +30,21 @@ const partOne = R.pipe(
   reducePolymer,
   R.length
 )
+const alphabet = R.map(a => String.fromCharCode(a).toLowerCase(), R.range(65, 65 + 26))
+const partTwo = input => {
+  return R.pipe(
+    R.map(
+      R.pipe(
+        letter => input.replace(new RegExp(letter, 'gi'), ''),
+        reducePolymer,
+        R.length
+      )
+    ),
+    R.reduce(R.min, Infinity),
+  )(alphabet)
+}
 
 const isUpper = s => s === s.toUpperCase()
 
 console.log('Part 1:', partOne(input))
+console.log('Part 2:', partTwo(input))
