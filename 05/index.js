@@ -13,18 +13,21 @@ const nullifyReactions = R.pipe(
   R.map(R.join(''))
 )
 
+const noReactionsLeft = R.pipe(nullifyReactions, R.length, R.equals(0))
+const applyNullifyingReaction = (polymer, nullifiedReaction) => R.replace(nullifiedReaction, '', polymer)
+
+const reducePolymer = R.until(
+  noReactionsLeft,
+  // Replace reactions that nullify each other
+  r => R.reduce(
+    applyNullifyingReaction,
+    r,
+    nullifyReactions(r)
+  )
+)
+
 const partOne = R.pipe(
-  R.until(
-    // Until no reactions left
-    R.pipe(nullifyReactions, R.length, R.equals(0)),
-    // Replace reactions that nullify each other
-    r => R.reduce(
-      (polymer, nullifiedReaction) => R.replace(nullifiedReaction, '', polymer),
-      r,
-      nullifyReactions(r)
-    )
-  ),
-  // Emit length of the leftover polymer
+  reducePolymer,
   R.length
 )
 
