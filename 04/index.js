@@ -22,7 +22,7 @@ const guardSleepTimePairs = input => {
   const shifts = R.pipe(
     R.pluck('action'),
     R.aperture(2),
-    R.reduce(onlyShiftsWithSleep, []),
+    R.reduce(ignoreCleanShifts, []),
     R.map(R.match(/(\d+)/g)),
     R.unnest
   )(input)
@@ -67,7 +67,7 @@ const mostMinutesAsleep = R.reduce(R.maxBy(([, minutes]) => minutes.length), [0,
 
 const minuteMostOftenAsleep = R.pipe(R.countBy(Number), R.toPairs, R.reduce(R.maxBy(([k, v]) => Number(v)), [0, 0]))
 
-const onlyShiftsWithSleep = (shifts, [actionOne, actionTwo]) => {
+const ignoreCleanShifts = (shifts, [actionOne, actionTwo]) => {
   if (isShiftAction(actionOne) && !isShiftAction(actionTwo)) {
     shifts.push(actionOne)
   }
