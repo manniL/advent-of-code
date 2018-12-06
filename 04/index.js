@@ -18,32 +18,41 @@ const transformToObject = str => {
 const guardSleepTimePairs = input => {
   // Split by "begin shift" records
   // Result is the interval for that specific guard
-  const intervals = splitWith(R.pipe(R.prop('action'), isShiftAction), input)
-  const shifts = R.pipe(
-    R.pluck('action'),
-    R.aperture(2),
-    R.reduce(ignoreCleanShifts, []),
-    R.map(R.match(/(\d+)/g)),
-    R.unnest
-  )(input)
+  const [intervals, shifts] = R.juxt([
+    splitWith(R.pipe(R.prop('action'), isShiftAction)),
+    R.pipe(
+      R.pluck('action'),
+      R.aperture(2),
+      R.reduce(ignoreCleanShifts, []),
+      R.map(R.match(/(\d+)/g)),
+      R.unnest
+    )
+  ])(input)
+
   // Merge intervals by creating pairs and resolve them
-  const sleepTimes = R.map(
+  const calculateSleepTimes = R.map(
     R.pipe(
       R.splitEvery(2),
       R.map(([asleep, wakeup]) => R.range(dateFns.getMinutes(asleep.date), dateFns.getMinutes(wakeup.date))),
       R.unnest
     )
-  )(intervals)
-  // 1:1 mapping -> zip
-  const zippedPairs = R.zip(shifts, sleepTimes)
-  // Merge duplicates ;)
-  const dedupedPairs = R.reduce((idMap, [id, minutes]) => {
+  )
+  const zipShiftsAndSleepTimes = R.zip(shifts)
+
+  const mergeTimes = R.reduce((idMap, [id, minutes]) => {
     const newValue = idMap.has(id) ? idMap.get(id).concat(minutes) : minutes
     idMap.set(id, newValue)
     return idMap
-  }, new Map)(zippedPairs)
+  }, new Map)
 
-  return Array.from(dedupedPairs)
+  const toArray = x => Array.from(x)
+
+  return R.pipe(
+    calculateSleepTimes,
+    zipShiftsAndSleepTimes,
+    mergeTimes,
+    toArray
+  )(intervals)
 }
 
 const partOne = input => {
