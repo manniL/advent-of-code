@@ -53,7 +53,7 @@ const formatInput = R.pipe(
       R.map(Number),
     )
   ),
-  R.zipWith((letter, coords) => [letter, ...coords], alphabet),
+  R.zipWith(R.prepend, alphabet),
   R.map(R.zipObj(['letter', 'x', 'y']))
 )
 
