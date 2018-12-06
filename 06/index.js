@@ -2,47 +2,6 @@ const R = require('ramda')
 const {readFileAndSplitByLines} = require('../utils/fs.js')
 const path = require('path')
 
-const partOne = input => {
-  // Sort points by x,y values
-  // Find the 4 "edges" (largest/smallest x/y coordinates)
-  const [minX, minY, maxX, maxY] = findAreaBoundaries(input)
-
-  const xRange = R.range(minX, maxX + 1)
-  const yRange = R.range(minY, maxY + 1)
-  const getLetterForCords = letterForCoords(input)
-  const grid = R.map(y => R.map(x => getLetterForCords({x, y}), xRange), yRange)
-  console.log(grid.map(row => row.join('')).join('\n'))
-  const zonesWithInfiniteArea = charactersAtBorder(grid)
-  const countedRows = R.map(R.countBy(R.identity))(grid)
-  const letters = R.reduce(
-    R.mergeWith(R.add),
-    {}, countedRows)
-
-  return R.pipe(
-    R.omit(zonesWithInfiniteArea),
-    R.toPairs,
-    R.reduce(R.maxBy(R.last), [0])
-  )(letters)
-}
-
-const partTwo = input => {
-  // Sort points by x,y values
-  // Find the 4 "edges" (largest/smallest x/y coordinates)
-  const [minX, minY, maxX, maxY] = findAreaBoundaries(input)
-
-  const xRange = R.range(minX, maxX + 1)
-  const yRange = R.range(minY, maxY + 1)
-  const distanceSumToAllCoordsWithInput = distanceSumToAllCoords(input)
-  const grid = R.map(y => R.map(x => distanceSumToAllCoordsWithInput({x, y}), xRange), yRange)
-  const countedRows = R.map(
-    R.pipe(
-      R.filter(R.gt(10000)),
-      R.length
-    )
-  )(grid)
-  return R.sum(countedRows)
-}
-
 const charactersAtBorder = R.pipe(
   R.juxt([R.head,
     R.last,
@@ -97,6 +56,50 @@ const formatInput = R.pipe(
   R.zipWith((letter, coords) => [letter, ...coords], alphabet),
   R.map(R.zipObj(['letter', 'x', 'y']))
 )
+
+const partOne = input => {
+  // Sort points by x,y values
+  // Find the 4 "edges" (largest/smallest x/y coordinates)
+  const [minX, minY, maxX, maxY] = findAreaBoundaries(input)
+
+  const xRange = R.range(minX, maxX + 1)
+  const yRange = R.range(minY, maxY + 1)
+  const getLetterForCords = letterForCoords(input)
+  const grid = R.map(y => R.map(x => getLetterForCords({x, y}), xRange), yRange)
+  const mergeCounts = R.reduce(R.mergeWith(R.add), {})
+  const countRows = R.map(R.countBy(R.identity))
+  const zonesWithInfiniteArea = charactersAtBorder(grid)
+  const removeInfiniteAreas = R.omit(zonesWithInfiniteArea)
+
+  return R.pipe(
+    countRows,
+    mergeCounts,
+    removeInfiniteAreas,
+    R.toPairs,
+    R.reduce(R.maxBy(R.last), [0])
+  )(grid)
+}
+
+const partTwo = input => {
+  // Sort points by x,y values
+  // Find the 4 "edges" (largest/smallest x/y coordinates)
+  const [minX, minY, maxX, maxY] = findAreaBoundaries(input)
+
+  const xRange = R.range(minX, maxX + 1)
+  const yRange = R.range(minY, maxY + 1)
+  const distanceSumToAllCoordsWithInput = distanceSumToAllCoords(input)
+  const grid = R.map(y => R.map(x => distanceSumToAllCoordsWithInput({x, y}), xRange), yRange)
+  const countAreasWithRightDistance = R.map(
+    R.pipe(
+      R.filter(R.gt(10000)),
+      R.length
+    )
+  )
+  return R.pipe(
+    countAreasWithRightDistance,
+    R.sum
+  )(grid)
+}
 
 console.log('Part 1:', partOne(formatInput(input)))
 console.log('Part 2:', partTwo(formatInput(input)))
