@@ -25,6 +25,24 @@ const partOne = input => {
   )(letters)
 }
 
+const partTwo = input => {
+  // Sort points by x,y values
+  // Find the 4 "edges" (largest/smallest x/y coordinates)
+  const [minX, minY, maxX, maxY] = findAreaBoundaries(input)
+
+  const xRange = R.range(minX, maxX + 1)
+  const yRange = R.range(minY, maxY + 1)
+  const distanceSumToAllCoordsWithInput = distanceSumToAllCoords(input)
+  const grid = R.map(y => R.map(x => distanceSumToAllCoordsWithInput({x, y}), xRange), yRange)
+  const countedRows = R.map(
+    R.pipe(
+      R.filter(R.gt(10000)),
+      R.length
+    )
+  )(grid)
+  return R.sum(countedRows)
+}
+
 const charactersAtBorder = R.pipe(
   R.juxt([R.head,
     R.last,
@@ -43,7 +61,14 @@ const letterForCoords = points => record => {
   return hasMultipleLowDistances ? '.' : minLetter
 }
 
-const manhattanDistance = ({x: x1, y: y1}, {x: x2, y: y2}) => Math.abs(x2 - x1) + Math.abs(y2 - y1)
+const distanceSumToAllCoords = points => record => {
+  return R.pipe(
+    R.map(manhattanDistance(record)),
+    R.sum
+  )(points)
+}
+
+const manhattanDistance = R.curry(({x: x1, y: y1}, {x: x2, y: y2}) => Math.abs(x2 - x1) + Math.abs(y2 - y1))
 
 const getX = R.map(R.prop('x'))
 const getY = R.map(R.prop('y'))
@@ -61,6 +86,7 @@ const input = readFileAndSplitByLines(path.join(__dirname, './input.txt'))
 // F*ck! There are more coordinate pairs than letters. Looked for over an hour for the mistake
 // Use lower + uppercase letters now
 const alphabet = R.map(a => String.fromCharCode(a))(R.concat(R.range(65, 91), R.range(97, 123)))
+
 const formatInput = R.pipe(
   R.map(
     R.pipe(
@@ -73,3 +99,4 @@ const formatInput = R.pipe(
 )
 
 console.log('Part 1:', partOne(formatInput(input)))
+console.log('Part 2:', partTwo(formatInput(input)))
