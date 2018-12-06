@@ -29,11 +29,17 @@ const guardSleepTimePairs = input => {
     )
   ])(input)
 
+  const intervalsToRange = R.pipe(
+    R.pluck('date'),
+    R.map(dateFns.getMinutes),
+    R.apply(R.range),
+  )
+
   // Merge intervals by creating pairs and resolve them
   const calculateSleepTimes = R.map(
     R.pipe(
       R.splitEvery(2),
-      R.map(([asleep, wakeup]) => R.range(dateFns.getMinutes(asleep.date), dateFns.getMinutes(wakeup.date))),
+      R.map(intervalsToRange),
       R.unnest
     )
   )
