@@ -20,16 +20,6 @@ const findStartTasks = R.pipe(
   sortAlphabetically
 )
 
-/*
-Get start letter
-Collect dependants
-For subsequent tasks:
-  * collect dependencies
-  * Already fulfilled?
-  * If so, add to string and get dependants
-  * If not
- */
-
 const createObject = R.applySpec({
   order: R.always(''),
   input: R.identity
@@ -122,10 +112,12 @@ const allWorkersIdle = R.pipe(
   R.equals(0)
 )
 
+const evolveWorker = R.evolve({
+  remaining: R.dec
+})
+
 const increaseTime = R.evolve({
-  workers: R.map(R.evolve({
-    remaining: R.dec
-  })),
+  workers: R.map(evolveWorker),
   elapsed: R.inc
 })
 
@@ -154,17 +146,22 @@ const removeDoneTasksFromWorkers = state => {
 }
 
 const updateTodoTasks = state => {
-  const done = R.view(doneLense)(state)
-  const workers = R.view(workersLense)(state)
-  const all = R.view(allTasksLense)(state)
+  const [done, workers, all] = R.juxt([
+    R.view(doneLense),
+    R.view(workersLense),
+    R.view(allTasksLense)
+  ])(state)
 
   const inProgress = R.concat(R.pluck('letter', workers), done)
 
   return R.set(todoLense, R.difference(all, inProgress))(state)
 }
 
-const MAX_NUMER_OF_WORKERS = 5
-const notMoreThanMaxWorkers = R.pipe(R.length, R.gt(MAX_NUMER_OF_WORKERS))
+const MAX_NUMBER_OF_WORKERS = 5
+const CHAR_CODE_A = 65
+const BASE_DURATION = 60
+
+const notMoreThanMaxWorkers = R.pipe(R.length, R.gt(MAX_NUMBER_OF_WORKERS))
 
 const tasksWithFulfilledDependencies = state => {
   const tasksInQueue = R.view(todoLense)(state)
@@ -187,15 +184,12 @@ const assignNewTaskToWorkers = state => {
     R.map(letterToTaskWithTime),
   )(state)
 
-  const freeWorkers = MAX_NUMER_OF_WORKERS - R.length(workers)
+  const freeWorkers = MAX_NUMBER_OF_WORKERS - R.length(workers)
   return R.set(workersLense, R.concat(workers, R.take(freeWorkers, eligibleTasks)))(state)
 }
 
-const CHAR_CODE_A = 65
-
 const charCodeFromLetter = a => a.charCodeAt(0)
 
-const BASE_DURATION = 60
 const getTimeFromCharCode = R.pipe(
   charCodeFromLetter,
   R.flip(R.subtract)(CHAR_CODE_A),
@@ -205,19 +199,23 @@ const getTimeFromCharCode = R.pipe(
 )
 
 const letterToTaskWithTime = R.applySpec({
-  letter: R.identity, remaining: getTimeFromCharCode
+  letter: R.identity,
+  remaining: getTimeFromCharCode
 })
+
+const fullSolutionPresent = R.both(noTasksLeft, allWorkersIdle)
+const doWork = R.pipe(
+  removeDoneTasksFromWorkers,
+  updateTodoTasks,
+  assignNewTaskToWorkers,
+  increaseTime,
+)
 
 const partTwo = R.pipe(
   createPartTwoObject,
   R.until(
-    R.both(noTasksLeft, allWorkersIdle),
-    R.pipe(
-      removeDoneTasksFromWorkers,
-      updateTodoTasks,
-      assignNewTaskToWorkers,
-      increaseTime,
-    )
+    fullSolutionPresent,
+    doWork
   ),
   R.prop('elapsed'),
 )
