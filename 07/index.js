@@ -77,10 +77,8 @@ const process = state => {
     R.head
   )(state)
 
-  const currentlyDone = R.view(doneLens, state)
-
   return R.pipe(
-    R.set(doneLens, R.concat(currentlyDone, R.of(nextTask))),
+    R.over(doneLens, R.flip(R.concat)(R.of(nextTask))),
     updateTodoTasks
   )(state)
 }
@@ -124,7 +122,6 @@ const increaseTime = R.evolve({
 
 const removeDoneTasksFromWorkers = state => {
   const workers = R.view(workersLens)(state)
-  const done = R.view(doneLens)(state)
 
   const hasNoSecondsRemaining = R.pipe(
     R.prop('remaining'),
@@ -136,13 +133,12 @@ const removeDoneTasksFromWorkers = state => {
       R.filter(hasNoSecondsRemaining),
       R.pluck('letter')
     ),
-    R.reject(hasNoSecondsRemaining)])(workers)
-
-  const doneTasks = R.concat(finishedTaskLetters, done)
+    R.reject(hasNoSecondsRemaining)
+  ])(workers)
 
   return R.pipe(
     R.set(workersLens, unfinishedTasks),
-    R.set(doneLens, doneTasks)
+    R.over(doneLens, R.flip(R.concat)(finishedTaskLetters))
   )(state)
 }
 
@@ -175,7 +171,10 @@ const assignNewTaskToWorkers = state => {
   )(state)
 
   const freeWorkers = MAX_NUMBER_OF_WORKERS - R.length(workers)
-  return R.set(workersLens, R.concat(workers, R.take(freeWorkers, eligibleTasks)))(state)
+  return R.over(
+    workersLens,
+    R.flip(R.concat)(R.take(freeWorkers, eligibleTasks))
+  )(state)
 }
 
 const charCodeFromLetter = a => a.charCodeAt(0)
