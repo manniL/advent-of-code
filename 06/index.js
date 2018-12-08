@@ -14,9 +14,14 @@ const charactersAtBorder = R.pipe(
 
 const letterForCoords = points => record => {
   const lettersWithDistances = R.map(({letter, ...cords}) => [letter, manhattanDistance(cords, record)], points)
-  const distances = R.map(R.last)(lettersWithDistances)
+  const toDistances = R.map(R.last)
   const [minLetter, minDistance] = R.reduce(R.minBy(R.last), [Infinity], lettersWithDistances)
-  const hasMultipleLowDistances = R.pipe(R.filter(R.equals(minDistance)), R.length, R.flip(R.gt)(1))(distances)
+  const hasMultipleLowDistances = R.pipe(
+    toDistances,
+    R.filter(R.equals(minDistance)),
+    R.length,
+    R.flip(R.gt)(1)
+  )(lettersWithDistances)
   return hasMultipleLowDistances ? '.' : minLetter
 }
 
