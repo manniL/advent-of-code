@@ -6,6 +6,13 @@ const input = readFile(path.join(__dirname, './input.txt'))
 
 const formatInput = R.pipe(R.split(' '), R.map(Number))
 
+// Lenses
+
+const nodesLens = R.lensProp('nodes')
+const treeLens = R.lensProp('tree')
+const totalLens = R.lensProp('total')
+const shouldAdvanceLens = R.lensProp('shouldAdvance')
+
 const createObject = R.applySpec({
   tree: R.identity,
   nodes: R.always([]),
@@ -13,25 +20,34 @@ const createObject = R.applySpec({
 })
 
 const retrieveNextNode = state => {
-  const { nodes, tree, ...leftoverState } = state
+  const [childrenCount, metadataCount] = R.view(treeLens, state)
+  const newNode = { childrenCount, metadataCount, values: [] }
 
-  const [childrenCount, metadataCount, ...leftoverTree] = tree
-  nodes.push({ childrenCount, metadataCount, values: [] })
-  return { ...leftoverState, nodes, tree: leftoverTree, shouldAdvance: false }
+  return R.pipe(
+    R.over(treeLens, R.drop(2)),
+    R.over(nodesLens, R.append(newNode)),
+    R.set(shouldAdvanceLens, false)
+  )(state)
 }
 
 const processNodes = state => {
-  let { nodes, tree, total, shouldAdvance } = state
-  let node = nodes.pop()
+  let node = R.last(R.view(nodesLens, state))
 
   if (node.childrenCount === 0) {
-    const metadata = tree.splice(0, node.metadataCount)
-    total += R.sum(metadata)
-  } else {
-    nodes.push(R.evolve({ childrenCount: R.dec }, node))
-    shouldAdvance = true
+    const metadata = R.take(node.metadataCount, R.view(treeLens)(state))
+
+    return R.pipe(
+      R.over(nodesLens, R.drop(1)),
+      R.over(treeLens, R.drop(node.metadataCount)),
+      R.over(totalLens, R.add(R.sum(metadata)))
+    )(state)
   }
-  return { nodes, tree, total, shouldAdvance }
+
+  return R.pipe(
+    R.over(nodesLens, R.drop(1)),
+    R.over(nodesLens, R.append(R.evolve({ childrenCount: R.dec }, node))),
+    R.set(shouldAdvanceLens, true)
+  )(state)
 }
 
 const processKnownNodes = R.until(
@@ -71,7 +87,6 @@ const processKnownNodesWithValues = state => {
     const value = R.isEmpty(node.values)
       ? R.sum(metadata)
       : R.reduce((sum, nodeReference) => sum + (R.prop(nodeReference - 1, node.values) || 0), 0, metadata)
-
 
     if (parentJob) {
       parentJob.values.push(value)
