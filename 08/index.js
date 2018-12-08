@@ -19,6 +19,11 @@ const createObject = R.applySpec({
   total: R.always(0)
 })
 
+const getLastNode = R.pipe(
+  R.view(nodesLens),
+  R.last
+)
+
 const retrieveNextNode = state => {
   const [childrenCount, metadataCount] = R.view(treeLens, state)
   const newNode = { childrenCount, metadataCount, values: [] }
@@ -31,23 +36,23 @@ const retrieveNextNode = state => {
 }
 
 const processNodes = state => {
-  let node = R.last(R.view(nodesLens, state))
+  const node = getLastNode(state)
 
-  if (node.childrenCount === 0) {
-    const metadata = R.take(node.metadataCount, R.view(treeLens)(state))
+  const metadata = R.take(node.metadataCount, R.view(treeLens)(state))
 
-    return R.pipe(
-      R.over(nodesLens, R.drop(1)),
-      R.over(treeLens, R.drop(node.metadataCount)),
-      R.over(totalLens, R.add(R.sum(metadata)))
-    )(state)
-  }
-
-  return R.pipe(
+  const descendTree = R.pipe(
     R.over(nodesLens, R.drop(1)),
     R.over(nodesLens, R.append(R.evolve({ childrenCount: R.dec }, node))),
     R.set(shouldAdvanceLens, true)
-  )(state)
+  )
+
+  const transformLeaf = R.pipe(
+    R.over(nodesLens, R.drop(1)),
+    R.over(treeLens, R.drop(node.metadataCount)),
+    R.over(totalLens, R.add(R.sum(metadata)))
+  )
+
+  return (node.childrenCount ? descendTree : transformLeaf)(state)
 }
 
 const processKnownNodes = R.until(
