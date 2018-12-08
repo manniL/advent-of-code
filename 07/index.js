@@ -1,5 +1,5 @@
 const R = require('ramda')
-const {readFileAndSplitByLines} = require('../utils/fs.js')
+const { readFileAndSplitByLines } = require('../utils/fs.js')
 const path = require('path')
 
 const input = readFileAndSplitByLines(path.join(__dirname, './input.txt'))
@@ -13,65 +13,55 @@ const formatInput = R.map(
 
 const sortAlphabetically = R.sort(R.comparator(R.lt))
 
+// Lenses
+
+const allLens = R.lensProp('all')
+const todoLens = R.lensProp('todo')
+const doneLens = R.lensProp('done')
+
+// Tasks
 const findStartTasks = R.pipe(
-  R.view(R.lensProp('input')),
   R.transpose,
   R.apply(R.difference),
   sortAlphabetically
 )
 
-const createObject = R.applySpec({
-  order: R.always(''),
-  input: R.identity
-})
+const allTasks = R.pipe(R.unnest, R.uniq)
 
-const evolve = (state) => {
-  if (!state.order) {
-    state.nextTasks = findStartTasks(state)
-  }
-  if (R.either(R.isEmpty, R.isNil)(state.nextTasks)) {
-    return state.order
-  }
-  const nextTaskToAdd = R.pipe(filteredDependencies, R.head)(state)
-  if (!nextTaskToAdd) {
-    return state.order
-  }
-  state.order += nextTaskToAdd
-  state.nextTasks = R.pipe(
-    R.without(R.split('', state.order)),
-    R.concat(collectDependants(nextTaskToAdd)(state.input)),
-    Array.from,
-    sortAlphabetically,
-  )(state.nextTasks)
-  return evolve(state)
+const noTasksLeft = R.pipe(
+  R.prop('todo'),
+  R.isEmpty
+)
+
+const tasksWithFulfilledDependencies = state => {
+  const tasksInQueue = R.view(todoLens)(state)
+  return R.filter(R.pipe(
+    R.map(collectDependencies(state.input)),
+    R.unnest,
+    R.map(R.flip(R.includes)(state.done)),
+    R.all(R.equals(true)),
+  ))(tasksInQueue)
 }
 
-const includesNot = R.complement(R.flip(R.includes))
+const updateTodoTasks = state => {
+  const tasksNotDoneYet = R.pipe(
+    R.juxt([
+      R.view(allLens),
+      R.view(doneLens)
+    ]),
+    R.apply(R.difference)
+  )(state)
 
-const filteredDependencies = state => R.pipe(
-  R.view(R.lensProp('nextTasks')),
-  R.filter(
-    R.both(
-      dependenciesFulfilled(state),
-      includesNot(state.order)
-    ),
-  ),
-  sortAlphabetically
-)(state)
+  return R.set(todoLens, tasksNotDoneYet, state)
+}
 
-const dependenciesFulfilled = ({order, input}) => R.pipe(
-  R.map(collectDependencies(input)),
-  R.unnest,
-  R.map(R.flip(R.includes)(order)),
-  R.all(R.equals(true)),
-)
-
-const collectDependants = letter => R.pipe(
-  R.filter(R.pipe(R.head, R.equals(letter))),
-  R.transpose,
-  R.ifElse(R.isEmpty, R.identity, R.last),
-  Array.from,
-)
+const createObject = R.applySpec({
+  done: R.always([]),
+  todo: allTasks,
+  all: allTasks,
+  input: R.identity,
+  nextTasks: findStartTasks
+})
 
 const collectDependencies = input => letter => R.pipe(
   R.filter(R.pipe(R.last, R.equals(letter))),
@@ -80,36 +70,47 @@ const collectDependencies = input => letter => R.pipe(
   Array.from
 )(input)
 
+const process = state => {
+  const nextTask = R.pipe(
+    tasksWithFulfilledDependencies,
+    sortAlphabetically,
+    R.head
+  )(state)
+
+  const currentlyDone = R.view(doneLens, state)
+
+  return R.pipe(
+    R.set(doneLens, R.concat(currentlyDone, R.of(nextTask))),
+    updateTodoTasks
+  )(state)
+}
+
 const partOne = R.pipe(
   createObject,
-  evolve
+  R.until(
+    noTasksLeft,
+    process
+  ),
+  R.prop('done'),
+  R.join('')
 )
 
-const allTasks = R.pipe(R.unnest, R.uniq)
+// -----------------------------------------------------------------------------------
 
 const createPartTwoObject = R.applySpec({
   input: R.identity,
-  allTasks,
+  all: allTasks,
   done: R.always([]),
   todo: allTasks,
   workers: R.always([]),
   elapsed: R.always(-1) // Seconds are 0-based. Start with -1 as nothing happened on creation
 })
 
-const workersLense = R.lensProp('workers')
-const allTasksLense = R.lensProp('allTasks')
-const todoLense = R.lensProp('todo')
-const doneLense = R.lensProp('done')
+const workersLens = R.lensProp('workers')
 
-const noTasksLeft = R.pipe(
-  R.prop('todo'),
-  R.length,
-  R.equals(0)
-)
 const allWorkersIdle = R.pipe(
   R.prop('workers'),
-  R.length,
-  R.equals(0)
+  R.isEmpty
 )
 
 const evolveWorker = R.evolve({
@@ -122,8 +123,8 @@ const increaseTime = R.evolve({
 })
 
 const removeDoneTasksFromWorkers = state => {
-  const workers = R.view(workersLense)(state)
-  const done = R.view(doneLense)(state)
+  const workers = R.view(workersLens)(state)
+  const done = R.view(doneLens)(state)
 
   const hasNoSecondsRemaining = R.pipe(
     R.prop('remaining'),
@@ -140,21 +141,20 @@ const removeDoneTasksFromWorkers = state => {
   const doneTasks = R.concat(finishedTaskLetters, done)
 
   return R.pipe(
-    R.set(workersLense, unfinishedTasks),
-    R.set(doneLense, doneTasks)
+    R.set(workersLens, unfinishedTasks),
+    R.set(doneLens, doneTasks)
   )(state)
 }
 
-const updateTodoTasks = state => {
+const updateTodoTasksWithWorkers = state => {
   const [done, workers, all] = R.juxt([
-    R.view(doneLense),
-    R.view(workersLense),
-    R.view(allTasksLense)
+    R.view(doneLens),
+    R.view(workersLens),
+    R.view(allLens)
   ])(state)
 
   const inProgress = R.concat(R.pluck('letter', workers), done)
-
-  return R.set(todoLense, R.difference(all, inProgress))(state)
+  return R.set(todoLens, R.difference(all, inProgress))(state)
 }
 
 const MAX_NUMBER_OF_WORKERS = 5
@@ -163,18 +163,8 @@ const BASE_DURATION = 60
 
 const notMoreThanMaxWorkers = R.pipe(R.length, R.gt(MAX_NUMBER_OF_WORKERS))
 
-const tasksWithFulfilledDependencies = state => {
-  const tasksInQueue = R.view(todoLense)(state)
-  return R.filter(R.pipe(
-    R.map(collectDependencies(state.input)),
-    R.unnest,
-    R.map(R.flip(R.includes)(state.done)),
-    R.all(R.equals(true)),
-  ))(tasksInQueue)
-}
-
 const assignNewTaskToWorkers = state => {
-  const workers = R.view(workersLense)(state)
+  const workers = R.view(workersLens)(state)
   if (!notMoreThanMaxWorkers(workers)) {
     return state
   }
@@ -185,7 +175,7 @@ const assignNewTaskToWorkers = state => {
   )(state)
 
   const freeWorkers = MAX_NUMBER_OF_WORKERS - R.length(workers)
-  return R.set(workersLense, R.concat(workers, R.take(freeWorkers, eligibleTasks)))(state)
+  return R.set(workersLens, R.concat(workers, R.take(freeWorkers, eligibleTasks)))(state)
 }
 
 const charCodeFromLetter = a => a.charCodeAt(0)
@@ -206,7 +196,7 @@ const letterToTaskWithTime = R.applySpec({
 const fullSolutionPresent = R.both(noTasksLeft, allWorkersIdle)
 const doWork = R.pipe(
   removeDoneTasksFromWorkers,
-  updateTodoTasks,
+  updateTodoTasksWithWorkers,
   assignNewTaskToWorkers,
   increaseTime,
 )
