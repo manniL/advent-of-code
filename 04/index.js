@@ -84,13 +84,21 @@ const partTwo = R.pipe(
 )
 
 const isShiftAction = R.test(/shift/)
+const isNoShiftAction = R.complement(isShiftAction)
+const appendTo = R.flip(R.append)
 
-const ignoreCleanShifts = (shifts, [actionOne, actionTwo]) => {
-  if (isShiftAction(actionOne) && !isShiftAction(actionTwo)) {
-    shifts.push(actionOne)
-  }
-  return shifts
-}
+// More functional version thanks to @ben-eb
+
+const ignoreCleanShifts = R.uncurryN(2,
+  shifts => R.ifElse(
+    R.both(
+      R.compose(isShiftAction, R.head),
+      R.compose(isNoShiftAction, R.last)
+    ),
+    R.compose(appendTo(shifts), R.head),
+    R.always(shifts)
+  )
+)
 
 const input = readFileAndSplitByLines(path.join(__dirname, './input.txt'))
 
