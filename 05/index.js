@@ -4,38 +4,62 @@ const path = require('path')
 
 const input = readFile(path.join(__dirname, './input.txt'))
 
+const splitToChainedPairs = R.aperture(2)
+const filterAffectedLetterPairs = R.filter(([a, b]) => b === (isUpper(a) ? a.toLowerCase() : a.toUpperCase()))
+
 const nullifyReactions = R.pipe(
   // Chained pairs of 2 (eg. [1, 2, 3, 4] => [ [1, 2], [2, 3], [3, 4] ]
-  R.aperture(2),
+  splitToChainedPairs,
   // Filter pairs where letters are xX or Xx
-  R.filter(([a, b]) => b === (isUpper(a) ? a.toLowerCase() : a.toUpperCase())),
+  filterAffectedLetterPairs,
   // Join these pairs again
   R.map(R.join(''))
 )
 
-const noReactionsLeft = R.pipe(nullifyReactions, R.length, R.equals(0))
-const applyNullifyingReaction = (polymer, nullifiedReaction) => R.replace(nullifiedReaction, '', polymer)
+const noReactionsLeft = R.pipe(nullifyReactions, R.isEmpty)
+
+const deleteString = R.flip(R.replace)('')
+const deleteStringFromInput = R.flip(deleteString)
+
+const removeNullifyingReactions = deleteStringFromInput
+
+const react = r => R.reduce(
+  removeNullifyingReactions,
+  r,
+  nullifyReactions(r)
+)
 
 const reducePolymer = R.until(
   noReactionsLeft,
   // Replace reactions that nullify each other
-  r => R.reduce(
-    applyNullifyingReaction,
-    r,
-    nullifyReactions(r)
-  )
+  react
 )
 
 const partOne = R.pipe(
   reducePolymer,
   R.length
 )
-const alphabet = R.map(a => String.fromCharCode(a).toLowerCase(), R.range(65, 65 + 26))
+const CHAR_CODE_A = 65
+const CHAR_CODE_Z = 91
+const alphabet = R.map(
+  R.pipe(
+    String.fromCharCode,
+    R.toLower
+  ),
+  R.range(CHAR_CODE_A, CHAR_CODE_Z))
+
+const toCaseInsensitiveRegExp = letter => new RegExp(letter, 'gi')
+
+const replaceLetterOccurrences = input => R.pipe(
+  toCaseInsensitiveRegExp,
+  deleteStringFromInput(input)
+)
+
 const partTwo = input => {
   return R.pipe(
     R.map(
       R.pipe(
-        letter => input.replace(new RegExp(letter, 'gi'), ''),
+        replaceLetterOccurrences(input),
         reducePolymer,
         R.length
       )
