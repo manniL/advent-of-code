@@ -46,7 +46,7 @@ const pairWithOneLetterMismatch = R.pipe(
 const partTwo = R.pipe(
   createHalfTable,
   R.find(pairWithOneLetterMismatch),
-  R.converge(R.zip, [R.head, R.last]),
+  R.apply(R.zip),
   R.filter(arrayPairIsEqual),
   R.map(R.last),
   R.join('')
