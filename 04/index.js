@@ -51,36 +51,39 @@ const guardSleepTimePairs = input => {
     return idMap
   }, new Map)
 
-  const toArray = x => Array.from(x)
-
   return R.pipe(
     calculateSleepTimes,
     zipShiftsAndSleepTimes,
     mergeTimes,
-    toArray
+    Array.from
   )(intervals)
 }
 
-const partOne = input => {
-  const dedupedPairs = guardSleepTimePairs(input)
-  const [id, minutesAsleep] = mostMinutesAsleep(dedupedPairs)
+const mostMinutesAsleep = R.reduce(R.maxBy(R.pipe(R.last, R.length)), [0, []])
 
-  const minute = R.head(minuteMostOftenAsleep(minutesAsleep))
+const minuteMostOftenAsleep = R.pipe(R.countBy(Number), R.toPairs, R.reduce(R.maxBy(([k, v]) => Number(v)), [0, 0]))
+
+const partOne = input => {
+  const [id, minutesAsleep] = R.pipe(
+    guardSleepTimePairs,
+    mostMinutesAsleep
+  )(input)
+
+  const minute = R.pipe(minuteMostOftenAsleep, R.head)(minutesAsleep)
+
   return {id, minute, result: id * minute}
 }
 
+const timeAsleep = R.pipe(R.last, R.last)
+const minuteLens = R.lensIndex(1)
 const partTwo = R.pipe(
   guardSleepTimePairs,
-  R.map(([id, minutes]) => [id, minuteMostOftenAsleep(minutes)]),
-  R.reduce(R.maxBy(([, [minute, timesAsleepThere]]) => timesAsleepThere), [0, [0, 0]]),
+  R.map(R.over(minuteLens, minuteMostOftenAsleep)),
+  R.reduce(R.maxBy(timeAsleep), [0, [0]]),
   ([id, [minute]]) => ({id, minute, result: id * minute})
 )
 
 const isShiftAction = R.test(/shift/)
-
-const mostMinutesAsleep = R.reduce(R.maxBy(([, minutes]) => minutes.length), [0, []])
-
-const minuteMostOftenAsleep = R.pipe(R.countBy(Number), R.toPairs, R.reduce(R.maxBy(([k, v]) => Number(v)), [0, 0]))
 
 const ignoreCleanShifts = (shifts, [actionOne, actionTwo]) => {
   if (isShiftAction(actionOne) && !isShiftAction(actionTwo)) {
@@ -92,6 +95,7 @@ const ignoreCleanShifts = (shifts, [actionOne, actionTwo]) => {
 const input = readFileAndSplitByLines(path.join(__dirname, './input.txt'))
 
 const formatInput = R.pipe(R.map(transformToObject), R.sort(dateComparator))
+
 const formattedInput = formatInput(input)
 console.log('Part 1:', partOne(formattedInput))
 console.log('Part 2:', partTwo(formattedInput))
