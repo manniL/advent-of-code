@@ -25,15 +25,23 @@ const partOne = R.pipe(
     twoLetters: getLetters(2),
     threeLetters: getLetters(3)
   }),
-  R.converge(R.multiply, [R.prop('twoLetters'), R.prop('threeLetters')]))
+  R.props(['twoLetters', 'threeLetters']),
+  R.apply(R.multiply)
+)
 
-const pairWithOneLetterMismatch = ([a, b]) => {
-  const zippedPairs = R.zip(splitIntoCharacters(a), splitIntoCharacters(b))
-  const equalZippedPairs = R.filter(arrayPairIsEqual, zippedPairs)
+const zipPairs = R.pipe(
+  R.map(splitIntoCharacters),
+  R.apply(R.zip),
+)
 
-  // One letter mismatch
-  return equalZippedPairs.length === a.length - 1
-}
+const filterDifferentPairs = R.reject(arrayPairIsEqual)
+
+const pairWithOneLetterMismatch = R.pipe(
+  zipPairs,
+  filterDifferentPairs,
+  R.length,
+  R.equals(1)
+)
 
 const partTwo = R.pipe(
   createHalfTable,
