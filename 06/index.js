@@ -47,9 +47,17 @@ const findAreaBoundaries = R.juxt([
 ])
 
 const input = readFileAndSplitByLines(path.join(__dirname, './input.txt'))
+
 // F*ck! There are more coordinate pairs than letters. Looked for over an hour for the mistake
 // Use lower + uppercase letters now
-const alphabet = R.map(a => String.fromCharCode(a))(R.concat(R.range(65, 91), R.range(97, 123)))
+const CHAR_CODE_UPPER_A = 65
+const CHAR_CODE_UPPER_Z = 91
+const CHAR_CODE_LOWER_A = 97
+const CHAR_CODE_LOWER_Z = 123
+const alphabet = R.map(
+  String.fromCharCode,
+  R.concat(R.range(CHAR_CODE_UPPER_A, CHAR_CODE_UPPER_Z), R.range(CHAR_CODE_LOWER_A, CHAR_CODE_LOWER_Z))
+)
 
 const formatInput = R.pipe(
   R.map(
@@ -85,6 +93,7 @@ const partOne = input => {
   )(grid)
 }
 
+const AREA_DISTANCE_CRITERION = 10000
 const partTwo = input => {
   // Sort points by x,y values
   // Find the 4 "edges" (largest/smallest x/y coordinates)
@@ -96,14 +105,11 @@ const partTwo = input => {
   const grid = R.map(y => R.map(x => distanceSumToAllCoordsWithInput({x, y}), xRange), yRange)
   const countAreasWithRightDistance = R.map(
     R.pipe(
-      R.filter(R.gt(10000)),
+      R.filter(R.gt(AREA_DISTANCE_CRITERION)),
       R.length
     )
   )
-  return R.pipe(
-    countAreasWithRightDistance,
-    R.sum
-  )(grid)
+  return R.pipe(countAreasWithRightDistance, R.sum)(grid)
 }
 
 console.log('Part 1:', partOne(formatInput(input)))
