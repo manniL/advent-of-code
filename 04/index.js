@@ -59,9 +59,16 @@ const guardSleepTimePairs = input => {
   )(intervals)
 }
 
-const mostMinutesAsleep = R.reduce(R.maxBy(R.pipe(R.last, R.length)), [0, []])
+const mostMinutesAsleep = R.reduce(R.maxBy(R.pipe(R.last, R.length)), [[]])
 
-const minuteMostOftenAsleep = R.pipe(R.countBy(Number), R.toPairs, R.reduce(R.maxBy(([k, v]) => Number(v)), [0, 0]))
+const minuteMostOftenAsleep = R.pipe(
+  R.countBy(Number),
+  R.toPairs,
+  R.reduce(
+    R.maxBy(R.pipe(R.last, Number)),
+    [0, 0]
+  )
+)
 
 const partOne = input => {
   const [id, minutesAsleep] = R.pipe(
