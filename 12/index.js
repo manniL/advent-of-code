@@ -17,8 +17,6 @@ const getInitialPlantsState = R.pipe(
 
 const guardStateWithEmptyPlaces = paddingSize => state => '.'.repeat(paddingSize) + state + '.'.repeat(paddingSize)
 
-const rules = getRulesObject(lines)
-
 const PADDING_SIZE = 4
 
 const guardStateWithEmptyPlacesWithPaddingSize = guardStateWithEmptyPlaces(PADDING_SIZE)
@@ -30,30 +28,37 @@ const potIsPresent = R.pipe(R.last, R.equals('#'))
 
 const normalizePotIndex = initialPotIndex => R.pipe(R.head, R.flip(R.subtract)(initialPotIndex))
 
-const evolvePlants = R.reduce((stateObject) => {
-  stateObject.plants = guardStateWithEmptyPlacesWithPaddingSize(stateObject.plants)
-  let plants = stateObject.plants
+const plantsLens = R.lensProp('plants')
+const potIndexLens = R.lensProp('potIndex')
 
-  stateObject.potIndex += 4
+const prepareStateObject = R.pipe(
+  R.over(plantsLens, guardStateWithEmptyPlacesWithPaddingSize),
+  R.over(potIndexLens, R.add(4)),
+)
 
-  const createInitialNextState = R.replace(/#/g, '.')
+const createEmptyPlantRow = R.replace(/#/g, '.')
 
-  stateObject.plants = R.reduce(
-    (nextState, [rule, result]) => R.reduce(
-      (nextState, i) => {
-        if (plants.substr(i, 5) !== rule) {
-          return nextState
-        }
-        return stringBeforeResult(i)(nextState) + result + stringAfterResult(i)(nextState)
-      },
-      nextState,
-      R.range(0, plants.length - PADDING_SIZE)
-    ),
-    createInitialNextState(plants),
-    rules
+const reducePlants = (plants => R.reduce(
+  (nextState, [rule, result]) => R.reduce(
+    (nextState, i) => {
+      if (plants.substr(i, 5) !== rule) {
+        return nextState
+      }
+      return stringBeforeResult(i)(nextState) + result + stringAfterResult(i)(nextState)
+    },
+    nextState,
+    R.range(0, plants.length - PADDING_SIZE)
+  ),
+  createEmptyPlantRow(plants),
+  getRulesObject(lines)
+))
+
+const evolvePlants = R.reduce(
+  R.pipe(
+    prepareStateObject,
+    R.over(plantsLens, reducePlants)
   )
-  return stateObject
-})
+)
 
 const createInitialStateObject = R.applySpec({ potIndex: R.always(0), plants: getInitialPlantsState })
 
